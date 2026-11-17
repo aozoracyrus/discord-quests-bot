@@ -1,19 +1,18 @@
 services:
-  - type: worker
+  - type: web
     name: discord-quests-bot
     runtime: docker
-    plan: starter
+    plan: free
     region: singapore
     dockerfilePath: ./Dockerfile
     dockerContext: .
     autoDeploy: true
+    healthCheckPath: /healthz
     envVars:
       - key: NODE_ENV
         value: production
       - key: TZ
         value: Asia/Ho_Chi_Minh
-      - key: PORT
-        value: "10000"
       - key: DEFAULT_LANGUAGE
         value: vi
       - key: USE_PROXY
@@ -50,7 +49,3 @@ services:
         sync: false
       - key: LOGTAIL_ENABLE
         value: "false"
-      - key: LOGTAIL_SOURCE_TOKEN
-        sync: false
-      - key: LOGTAIL_INGESTION_HOST
-        sync: false
