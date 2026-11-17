@@ -1,0 +1,171 @@
+name: Export code for AI Render fix
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+      - master
+
+permissions:
+  contents: write
+
+jobs:
+  export:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Build code bundle
+        id: bundle
+        run: |
+          set -euo pipefail
+          mkdir -p export
+          OUT="export/code-bundle.txt"
+
+          {
+            echo "REPO: $GITHUB_REPOSITORY"
+            echo "BRANCH: ${GITHUB_REF_NAME:-unknown}"
+            echo "RUN: $GITHUB_RUN_ID"
+            echo "TIME: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+            echo
+
+            echo "### STRUCTURE"
+            find . -maxdepth 4 -type f \
+              -not -path "./node_modules/*" \
+              -not -path "./.git/*" \
+              -not -path "./dist/*" \
+              -not -path "./build/*" \
+              -not -path "./coverage/*" \
+              -not -path "./export/*" \
+              -not -path "./.next/*" \
+              -not -name "package-lock.json" \
+              -not -name "yarn.lock" \
+              -not -name "pnpm-lock.yaml" \
+              -not -name "*.map" \
+              -not -name "*.min.js" \
+              | sort
+
+            echo
+            echo "### PACKAGE_JSON"
+            if [ -f package.json ]; then cat package.json; else echo "missing"; fi
+
+            echo
+            echo "### ENV_EXAMPLE"
+            if [ -f .env.example ]; then
+              cat .env.example
+            elif [ -f .env.sample ]; then
+              cat .env.sample
+            else
+              echo "missing"
+            fi
+
+            echo
+            echo "### RENDER_CONFIG"
+            for f in render.yaml render.yml Procfile Dockerfile .dockerignore; do
+              if [ -f "$f" ]; then
+                echo "FILE: $f"
+                cat "$f"
+                echo
+              fi
+            done
+
+            echo
+            echo "### ENTRY_CANDIDATES"
+            for f in index.js bot.js main.js app.js server.js \
+                     src/index.js src/bot.js src/main.js src/app.js src/server.js \
+                     index.ts bot.ts main.ts app.ts server.ts \
+                     src/index.ts src/bot.ts src/main.ts src/app.ts src/server.ts; do
+              if [ -f "$f" ]; then
+                echo "FILE: $f"
+                cat "$f"
+                echo
+              fi
+            done
+
+            echo
+            echo "### SOURCE_FILES"
+            find . -maxdepth 5 -type f \
+              \( -path "./commands/*" -o -path "./events/*" -o -path "./src/commands/*" -o -path "./src/events/*" \
+                 -o -path "./utils/*" -o -path "./src/utils/*" -o -path "./lib/*" -o -path "./src/lib/*" \
+                 -o -path "./cogs/*" -o -path "./src/cogs/*" -o -path "./services/*" -o -path "./src/services/*" \
+                 -o -path "./database/*" -o -path "./src/database/*" -o -path "./db/*" -o -path "./src/db/*" \) \
+              \( -name "*.js" -o -name "*.ts" -o -name "*.py" \) \
+              -not -path "./node_modules/*" \
+              -not -name "*.test.js" \
+              -not -name "*.spec.js" \
+              | sort | while IFS= read -r f; do
+                  echo "FILE: $f"
+                  cat "$f"
+                  echo
+                done
+          } > "$OUT"
+
+          BYTES=$(wc -c < "$OUT")
+          LINES=$(wc -l < "$OUT")
+          echo "bytes=$BYTES" >> "$GITHUB_OUTPUT"
+          echo "lines=$LINES" >> "$GITHUB_OUTPUT"
+          echo "Bundle size: $BYTES bytes, $LINES lines"
+
+      - name: Show bundle size warning
+        run: |
+          BYTES="${{ steps.bundle.outputs.bytes }}"
+          if [ "${BYTES:-0}" -gt 300000 ]; then
+            echo "::warning::Code bundle lớn hơn 300KB. Nếu gửi chat bị mất, hãy chia thành nhiều phần."
+          fi
+
+      - name: Install dependencies if package.json exists
+        if: hashFiles('package.json') != ''
+        continue-on-error: true
+        run: |
+          if [ -f package-lock.json ]; then
+            npm ci
+          else
+            npm install
+          fi
+
+      - name: Syntax check JavaScript files
+        if: always()
+        continue-on-error: true
+        run: |
+          for f in $(find . -path ./node_modules -prune -o -type f -name "*.js" -print); do
+            echo "Checking $f"
+            node --check "$f" || true
+          done
+
+      - name: Upload bundle artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: code-bundle
+          path: export/code-bundle.txt
+          retention-days: 7
+
+      - name: Push bundle to ai-export branch
+        if: always() && steps.bundle.outcome == 'success'
+        run: |
+          set -euo pipefail
+          if [ ! -f export/code-bundle.txt ]; then
+            echo "No bundle file found"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -B ai-export
+          git add export/code-bundle.txt
+
+          if ! git diff --cached --quiet; then
+            git commit -m "chore: update code bundle for Render fix"
+            git push --force origin ai-export
+          else
+            echo "No changes to push"
+          fi
