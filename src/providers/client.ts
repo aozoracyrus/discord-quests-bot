@@ -52,13 +52,15 @@ const client = new CustomClient({
 
     const tokenParts = config.token.split('.');
     if (tokenParts.length !== 3) {
-      throw new Error(`Token format sai! Có ${tokenParts.length} phần, cần 3 phần cách nhau bởi '.'`);
+      throw new Error(`Token format sai! Có ${tokenParts.length} phần, cần 3 phần`);
     }
+    Logger.info(`[Client] Token format OK: ${tokenParts.length} phần`);
 
     await client.login(config.token);
     Logger.info("[Client] ✅ Đăng nhập Discord THÀNH CÔNG!");
   } catch (error: any) {
     Logger.error("[Client] ❌ LỖI KHI LOGIN:", error?.message || error);
+    Logger.error("[Client] Stack:", error?.stack || "No stack");
   }
 })();
 
@@ -66,6 +68,10 @@ client.once("ready", () => {
   Logger.info(`[Client] 🎉 Bot đã ONLINE: ${client.user?.tag}`);
   Logger.info(`[Client] 🆔 Bot ID: ${client.user?.id}`);
   Logger.info(`[Client] 📊 Đang ở ${client.guilds.cache.size} server(s)`);
+});
+
+client.on("error", (error) => {
+  Logger.error("[Client] Discord client error:", error);
 });
 
 export default client;
