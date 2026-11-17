@@ -1,0 +1,12 @@
+node_modules
+.git
+.env
+.env.*
+logs
+*.log
+coverage
+dist
+proxy.txt
+.github
+.vscode
+.idea
