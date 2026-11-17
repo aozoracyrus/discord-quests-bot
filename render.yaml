@@ -1,0 +1,56 @@
+services:
+  - type: worker
+    name: discord-quests-bot
+    runtime: docker
+    plan: starter
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    dockerContext: .
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: TZ
+        value: Asia/Ho_Chi_Minh
+      - key: PORT
+        value: "10000"
+      - key: DEFAULT_LANGUAGE
+        value: vi
+      - key: USE_PROXY
+        value: "false"
+      - key: ENABLE_NOTIFICATION_DM
+        value: "false"
+      - key: CHILD_PROCESS_COUNT
+        value: "1"
+      - key: QUESTS_PER_CHILD_PROCESS
+        value: "999"
+      - key: WATCHDOG_HOUR_GMT7
+        value: "6"
+      - key: DISCORD_TOKEN
+        sync: false
+      - key: CLIENT_ID
+        sync: false
+      - key: GUILD_ID
+        sync: false
+      - key: MAIN_SERVER_ID
+        sync: false
+      - key: NOTIFICATION_CHANNEL_ID
+        sync: false
+      - key: COMPLETED_QUESTS_CHANNEL_ID
+        sync: false
+      - key: VOICE_CHANNEL_ID
+        sync: false
+      - key: VOICE_ROLE_ID
+        sync: false
+      - key: IMAGE_CHANNEL_ID
+        sync: false
+      - key: SELFBOT_TOKEN
+        sync: false
+      - key: MONGO_URI
+        sync: false
+      - key: LOGTAIL_ENABLE
+        value: "false"
+      - key: LOGTAIL_SOURCE_TOKEN
+        sync: false
+      - key: LOGTAIL_INGESTION_HOST
+        sync: false
