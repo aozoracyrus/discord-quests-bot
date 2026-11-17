@@ -37,7 +37,7 @@ const client = new CustomClient({
   }),
 });
 
-// === Login với error handling + timeout ===
+// === Login với error handling chi tiết ===
 (async () => {
   try {
     Logger.info("[Client] 🔄 Đang load commands...");
@@ -47,10 +47,18 @@ const client = new CustomClient({
 
     Logger.info("[Client] 🔄 Đang đăng nhập Discord...");
     Logger.info(`[Client] Token length: ${config.token?.length || 0} ký tự`);
+    Logger.info(`[Client] Token starts with: ${config.token?.substring(0, 20)}...`);
     
     if (!config.token || config.token.length < 50) {
       throw new Error("Token quá ngắn hoặc rỗng! Kiểm tra src/config/config.ts");
     }
+
+    // Kiểm tra format token (phải có 3 phần cách nhau bởi .)
+    const tokenParts = config.token.split('.');
+    if (tokenParts.length !== 3) {
+      throw new Error(`Token format sai! Có ${tokenParts.length} phần, cần 3 phần cách nhau bởi '.'`);
+    }
+    Logger.info(`[Client] Token format OK: ${tokenParts.length} phần`);
 
     // Timeout 30s cho login
     const loginPromise = client.login(config.token);
