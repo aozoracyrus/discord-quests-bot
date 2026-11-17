@@ -25,7 +25,7 @@ function generateHeaders(token: string, options?: HeaderOptions): { [key: string
         'content-type': 'application/json',
         'origin': 'https://discord.com',
         'referer': 'https://discord.com/quest-home',
-        'x-discord-timezone': 'Africa/Algiers',
+        'x-discord-timezone': 'Asia/Ho_Chi_Minh',
     };
 
     if (options?.superProperties) {
