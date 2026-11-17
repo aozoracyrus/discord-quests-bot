@@ -25,7 +25,7 @@ export default {
   prefix: "!",
 
   // Danh sách developer
-  developers: ["527826654660132890"],
+  developers: ["1160199218313564210"],
 
   // Server chính (chỉ để gửi log, KHÔNG ép user vào)
   mainServerId: env("MAIN_SERVER_ID", "1399471603003428966"),
