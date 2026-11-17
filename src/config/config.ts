@@ -24,13 +24,13 @@ export default {
   // Prefix cho message command
   prefix: "!",
 
-  // Danh sách developer (có quyền devOnly)
+  // Danh sách developer (ID của bạn)
   developers: ["1160199218313564210"],
 
-  // Server chính của bot (chỉ để gửi log, KHÔNG ép user vào)
+  // Server chính (chỉ để gửi log, KHÔNG ép user vào)
   mainServerId: env("MAIN_SERVER_ID", "1399471603003428966"),
 
-  // Cấu hình database - giữ MongoDB Atlas
+  // Database đọc từ env MONGO_URI
   database: {
     type: SupportedDatabaseTypes.MongoDB,
     url: env("MONGO_URI", "mongodb://localhost:27017/badge2"),
